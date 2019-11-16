@@ -17,21 +17,66 @@ class Reader extends React.Component {
   };
 
   componentDidMount() {
-    if (!this.findedIndex() || this.findedIndex() > items.length) {
+    const newIndex = this.indexOfItemFromUrl();
+    
+    if (!newIndex || newIndex > items.length) {
       return this.changeUrl(1);
     }
 
-    this.indexSetState();
-    return this.changeUrl();
+    this.indexSetState(newIndex);
+    
+    return this.changeUrl(newIndex);
   }
 
   componentDidUpdate(prevProps, prevState) {
+    this.getUpdateByUrl(prevProps, prevState);
+  }
+
+  changeUrl = index => {
+    const { history, location } = this.props;
+
+    history.push({
+      ...location,
+      search: `item=${index}`,
+    });
+  };
+
+  indexOfItemFromUrl = () => {
+    const { location } = this.props;
+    return Number(getIndexFromLocation(location));
+  };
+
+  indexSetState = index => {
+    this.setState({
+      index: Number(index),
+    });
+  };
+
+  getUpdateByUrl = (prevProps, prevState) => {
     const { index } = this.state;
+    const { location } = this.props;
+    if (location.search !== prevProps.location.search) {
+      const newIndex =
+        this.indexOfItemFromUrl() > items.length
+          ? 1
+          : this.indexOfItemFromUrl();
+      if (!getIndexFromLocation(location)) {
+        const index = 1;
+        this.props.history.push({
+          ...location,
+          search: `item=${index}`,
+        });
+        return this.setState({ index });
+      }
+
+      this.setState({ index: newIndex });
+      return this.changeUrl(newIndex);
+    }
 
     if (index !== prevState.index) {
-      this.changeUrl();
+      this.changeUrl(index);
     }
-  }
+  };
 
   handlerControlsBtn = ({ target }) => {
     const {
@@ -46,26 +91,6 @@ class Reader extends React.Component {
         index: prev.index + 1,
       }));
     }
-  };
-
-  changeUrl = (index = this.state.index) => {
-    const { history, location } = this.props;
-
-    history.push({
-      ...location,
-      search: `item=${index}`,
-    });
-  };
-
-  findedIndex = () => {
-    const { location } = this.props;
-    return getIndexFromLocation(location);
-  };
-
-  indexSetState = () => {
-    this.setState({
-      index: Number(this.findedIndex()),
-    });
   };
 
   render() {
